@@ -5,12 +5,14 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Tetris PWA</title>
 
-  <!-- Manifest & favicon: le icone sono file PNG ESTERNI in /assets/icons/ (non inline) -->
-  <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png">
+  <!-- Manifest & favicon: le icone sono file PNG ESTERNI in ./assets/icons/ (non inline) -->
+  <link rel="manifest" href="./manifest.webmanifest" type="application/manifest+json">
+  <link rel="icon" type="image/png" sizes="16x16" href="./assets/icons/favicon-16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/icons/favicon-32.png">
+  <link rel="apple-touch-icon" href="./assets/icons/apple-touch-icon-180.png">
   <meta name="theme-color" content="#0e1116" />
 
-  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="./styles/styles.css">
 </head>
 <body>
   <!-- Schermata iniziale / Menu -->
@@ -163,6 +165,6 @@
     <span>© Tetris PWA – HTML5</span>
   </footer>
 
-  <script type="module" src="/src/main.js"></script>
+  <script type="module" src="./src/main.js"></script>
 </body>
 </html>
