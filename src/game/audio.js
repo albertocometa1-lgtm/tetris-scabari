@@ -34,26 +34,51 @@ export class AudioSys {
   playMusic(){
     if (!this.ctx) this.ensureContext();
     this.stopMusic();
-    // Sequencer molto leggero a passi da 0.25 beat, 90-130 BPM
+    this._nextTime = null;
+    const ctx = this.ctx;
+    if (this.trackIdx === 0) {
+      const BPM = 150;
+      const SPB = 60/BPM;
+      const scale = [0,2,3,5,7,8,10];
+      const motifA = [0,1,2,3,4,3,2,1,3,4,5,4,3,2,1,0];
+      const motifB = motifA.map(n=>n);
+      const pattern = motifA.concat(motifB);
+      let step = 0;
+      const loopLen = pattern.length;
+      const scheduleWindow = 0.15;
+      const schedule = () => {
+        const now = ctx.currentTime;
+        while (!this._nextTime || this._nextTime < now + scheduleWindow) {
+          this._nextTime = (this._nextTime||now) + SPB/2;
+          if (step%2===0) {
+            const b = 36 + scale[(step/2)%scale.length];
+            this._tone(this._note(b), this._nextTime, 0.2, 'triangle', this.musicGain, 0.25);
+          }
+          const idx = pattern[step%loopLen];
+          const octave = step>=motifA.length ? 12 : 0;
+          const lead = 60 + scale[idx] + octave;
+          this._tone(this._note(lead), this._nextTime+0.01, 0.12, 'square', this.musicGain, 0.2);
+          this._noise(this._nextTime, 0.03, this.musicGain, 6000, 0.2);
+          step = (step+1)%loopLen;
+        }
+        this._seqTimer = requestAnimationFrame(schedule);
+      };
+      schedule();
+      return;
+    }
     const BPM = [96,104,110,118,126][this.trackIdx|0];
     const SPB = 60/BPM;
-    const scale = [0,2,3,5,7,10]; // esatonale minor-ish
-    const base = [48,50,43,45,47][this.trackIdx|0]; // MIDI-like base pitch
-
+    const scale = [0,2,3,5,7,10];
+    const base = [48,50,43,45,47][this.trackIdx|0];
     let step = 0;
     const loopLen = 64;
     const scheduleWindow = 0.12;
-    const ctx = this.ctx;
-
     const schedule = () => {
       const now = ctx.currentTime;
       while (!this._nextTime || this._nextTime < now + scheduleWindow) {
-        this._nextTime = (this._nextTime||now) + SPB/2; // 8th notes
-        // bass every beat
-        if (step%2===0) this._tone(this._note(base + scale[(step/2)%scale.length]), this._nextTime, 0.12, 'tri', this.musicGain, .18);
-        // lead every 4th
+        this._nextTime = (this._nextTime||now) + SPB/2;
+        if (step%2===0) this._tone(this._note(base + scale[(step/2)%scale.length]), this._nextTime, 0.12, 'triangle', this.musicGain, .18);
         if (step%4===0) this._tone(this._note(base+12 + scale[(step/4*2)%scale.length]), this._nextTime+0.01, 0.08, 'sine', this.musicGain, .12);
-        // hihat style noise
         if (step%1===0) this._noise(this._nextTime, 0.03, this.musicGain, 6000, 0.3);
         step = (step+1)%loopLen;
       }

@@ -1,4 +1,5 @@
 import { COLORS, easeOutQuad, lerp } from './utils.js';
+import { TETROMINOES } from './tetrominoes.js';
 
 // Renderer Canvas, pannelli mini per Next/Hold, particelle/flash/shake
 export class Renderer {
@@ -9,7 +10,9 @@ export class Renderer {
     this.g = game;
     this.store = store;
     this._particles = [];
-    this._shake = 0;
+    this._spawn = 0;
+    this._ring = null;
+    this._shakeT = 0; this._shakeDur = 0; this._shakeAmp = 0;
     this._fpsLast = 0; this._fps = 0;
     this._lastTs = 0;
   }
@@ -28,9 +31,15 @@ export class Renderer {
     const oy = Math.floor((this.cv.height - s*20)/2);
 
     // shake
-    if (this._shake>0) this._shake -= dt;
-    const sx = this._shake>0 ? (Math.random()*4-2) : 0;
-    const sy = this._shake>0 ? (Math.random()*4-2) : 0;
+    if (this._spawn>0) this._spawn = Math.max(0, this._spawn - dt);
+    let sx = 0, sy = 0;
+    if (this._shakeT < this._shakeDur) {
+      this._shakeT += dt;
+      const decay = Math.exp(-3 * this._shakeT / this._shakeDur);
+      const amp = this._shakeAmp * decay;
+      sx = (Math.random()*2-1)*amp;
+      sy = (Math.random()*2-1)*amp;
+    }
 
     cx.clearRect(0,0,this.cv.width,this.cv.height);
     cx.save(); cx.translate(ox+sx, oy+sy);
@@ -63,19 +72,56 @@ export class Renderer {
     // piece
     if (this.g.cur) {
       const shape = this.g.cur.cells[this.g.cur.rot];
-      for (const [x,y] of shape) {
-        this.drawCell(this.g.cur.x+x, this.g.cur.y+y, s, COLORS[this.g.cur.id]);
+      if (this._spawn>0) {
+        const p = 1 - (this._spawn/120);
+        const scale = 0.8 + 0.2*easeOutQuad(p);
+        const glow = 1 - p;
+        const px = (this.g.cur.x+2)*s;
+        const py = (this.g.cur.y+2)*s;
+        cx.save();
+        cx.translate(px,py);
+        cx.scale(scale,scale);
+        cx.translate(-px,-py);
+        for (const [x,y] of shape) {
+          this.drawCell(this.g.cur.x+x, this.g.cur.y+y, s, COLORS[this.g.cur.id]);
+          if (glow>0){
+            cx.globalAlpha = glow*0.6;
+            cx.fillStyle = '#fff';
+            cx.fillRect((this.g.cur.x+x)*s, (this.g.cur.y+y)*s, s, s);
+            cx.globalAlpha = 1;
+          }
+        }
+        cx.restore();
+      } else {
+        for (const [x,y] of shape) {
+          this.drawCell(this.g.cur.x+x, this.g.cur.y+y, s, COLORS[this.g.cur.id]);
+        }
       }
     }
 
     // particelle
     this.updateParticles(dt);
     this.drawParticles(s);
-
     cx.restore();
 
+    if (this._ring){
+      this._ring.age += dt;
+      const t = this._ring.age / this._ring.life;
+      const r = easeOutQuad(t) * (this.cv.width*0.6);
+      cx.save();
+      cx.translate(this.cv.width/2, this.cv.height*0.35);
+      cx.globalAlpha = 1 - t;
+      cx.strokeStyle = '#ffee58';
+      cx.lineWidth = 4;
+      cx.beginPath();
+      cx.arc(0,0,r,0,Math.PI*2);
+      cx.stroke();
+      cx.restore();
+      if (t>=1) this._ring=null;
+    }
+
     // next & hold
-    this.drawMini(this.nextCx, this.nextCv, this.g.queue.slice(0,5));
+    this.drawMini(this.nextCx, this.nextCv, this.g.queue.slice(0,1), true);
     this.drawMini(this.holdCx, this.holdCv, this.g.holdId?[this.g.holdId]:[], true);
 
     // FPS
@@ -112,27 +158,20 @@ export class Renderer {
 
   drawMini(cx, cv, ids, single=false){
     cx.clearRect(0,0,cv.width, cv.height);
-    const s = Math.floor((cv.width)/6);
+    const s = single ? Math.floor(Math.min(cv.width, cv.height)/4) : Math.floor((cv.width)/6);
     ids.forEach((id, i)=>{
-      const sh = this.g ? this.g.cur.cells[0] : []; // base orientation
-      const cells = this.g ? (this.g.cur.id===id ? this.g.cur.cells[this.g.cur.rot] : this.g.cur.cells[0]) : sh;
-      const data = this.shapeFor(id);
+      const data = TETROMINOES[id];
       const cells0 = data.cells[0];
       const bounds = this.bounds(cells0);
       const ox = Math.floor((cv.width - (bounds.w*s))/2) - bounds.x*s;
       const oy = single ? Math.floor((cv.height - (bounds.h*s))/2) - bounds.y*s : (i* (s*3)) + 6 - bounds.y*s;
       cells0.forEach(([x,y])=>{
-        cx.fillStyle = COLORS[id]; 
+        cx.fillStyle = COLORS[id];
         cx.beginPath();
         cx.roundRect(ox + x*s+1, oy + y*s+1, s-2, s-2, s*0.15);
         cx.fill();
       });
     });
-  }
-
-  shapeFor(id){
-    // evitare import circolare: piccoli dati in runtime dal game
-    return { cells: this.g.cur.cells }; // safe enough per il mini draw corrente
   }
 
   bounds(cells){
@@ -156,19 +195,21 @@ export class Renderer {
       if (t<1) requestAnimationFrame(animate);
     };
     requestAnimationFrame(animate);
-    // particelle
     for (let i=0;i<40+(count*10);i++){
       this._particles.push({
         x: this.cv.width/2, y: this.cv.height*0.35,
-        vx: (Math.random()*2-1)*2.2, vy: (Math.random()*-1.5-0.5)*2.2,
+        vx: (Math.random()*2-1)*1.5, vy: (Math.random()*-2-1),
         life: 600, age:0, color: count>=4?'#ffee58':'#ffffff'
       });
     }
+    if (count>=4) this._ring = {age:0, life:600};
   }
 
   bump(){ /* micro effetto su lock */ }
 
-  shake(){ this._shake = 400; }
+  spawn(){ this._spawn = 120; }
+
+  shake(){ this._shakeT = 0; this._shakeDur = 280; this._shakeAmp = 6; }
 
   updateParticles(dt){
     this._particles = this._particles.filter(p=> (p.age+=dt) < p.life);

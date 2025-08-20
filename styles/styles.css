@@ -31,8 +31,8 @@ canvas#game { display:block; background: radial-gradient(120% 120% at 50% 0%, #0
 
 .mini { width: 100%; background: var(--cell); border-radius: 8px; }
 
-.panel { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
-.panel.show { display:flex; }
+.panel { position: absolute; inset: 0; display:flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); opacity:0; transform: translateY(20px); pointer-events:none; transition: opacity .2s ease, transform .2s ease; }
+.panel.show { opacity:1; transform: translateY(0); pointer-events:auto; }
 .panel > * { background: var(--panel); border:1px solid var(--panel-border); border-radius:16px; padding: 18px; box-shadow: var(--shadow); min-width: 280px; }
 .panel h2 { margin-top: 0; }
 .panel .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
@@ -48,8 +48,10 @@ canvas#game { display:block; background: radial-gradient(120% 120% at 50% 0%, #0
 .touch-overlay { position:absolute; inset:auto 0 0 0; display:none; padding:8px; gap:8px; }
 .touch-overlay .dpad { position:absolute; left:8px; bottom:8px; display:grid; grid-template-columns: 60px 60px; grid-template-rows: 60px 60px; gap:6px; }
 .touch-overlay .actions { position:absolute; right:8px; bottom:8px; display:grid; grid-template-columns: repeat(2,60px); grid-template-rows: repeat(2,60px); gap:6px; }
-.ctl { background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.15); color: var(--fg); border-radius: 12px; font-size: 1.1rem; }
+.ctl { background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.15); color: var(--fg); border-radius: 12px; font-size: 1.1rem; position:relative; overflow:hidden; }
 .ctl:active { background: rgba(255,255,255,.12); transform: translateY(1px); }
+.ctl::after { content:""; position:absolute; inset:0; border-radius:inherit; background:rgba(255,255,255,.25); transform:scale(0); opacity:0; transition:transform .3s ease, opacity .3s ease; }
+.ctl:active::after { transform:scale(1); opacity:1; }
 
 @media (max-width: 1000px) {
   .app-main { grid-template-columns: 1fr; }

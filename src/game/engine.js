@@ -1,6 +1,6 @@
 import { Board } from './board.js';
 import { TETROMINOES, JLSTZ_KICKS } from './tetrominoes.js';
-import { shuffle, rnd, clamp } from './utils.js';
+import { shuffle } from './utils.js';
 
 const PIECES = Object.keys(TETROMINOES);
 const GRAVITY_BY_LEVEL = [0.8,0.72,0.63,0.55,0.47,0.4,0.33,0.27,0.22,0.18,0.15,0.12,0.1]; // sec per cell
@@ -10,7 +10,6 @@ export class Game {
   constructor(onEvent) {
     this.onEvent = onEvent || (()=>{});
     this.board = new Board(10,20);
-    this.newGame();
   }
   newGame() {
     this.board.reset();
@@ -21,20 +20,23 @@ export class Game {
     this.cur = null;
     this.holdId = null; this.heldThisTurn = false;
     this.queue = [];
+    this.lastId = null;
     this.refill();
     this.spawn();
     this.gameOver = false;
-    this.lockDelay = 0; // ms
   }
   canResume(){ return !!this.cur && !this.gameOver; }
 
   refill(){
     const bag = shuffle(PIECES.slice());
+    if (this.lastId && bag[0] === this.lastId) [bag[0], bag[1]] = [bag[1], bag[0]];
     this.queue.push(...bag);
   }
   pull(){
     if (this.queue.length <= 7) this.refill();
-    return this.queue.shift();
+    const id = this.queue.shift();
+    this.lastId = id;
+    return id;
   }
   spawn(){
     const id = this.pull();
@@ -43,8 +45,10 @@ export class Game {
     if (this.collides(this.cur, this.cur.x, this.cur.y)) {
       this.gameOver = true;
       this.onEvent({type:'gameOver'});
+    } else {
+      this.heldThisTurn = false;
+      this.onEvent({type:'spawn', id});
     }
-    this.heldThisTurn = false;
   }
   collides(piece, x, y){
     const shape = piece.cells[piece.rot];
@@ -70,7 +74,7 @@ export class Game {
       }
     }
   }
-  softDrop(){ if (!this.step(1)) this.lockDelay = 0; this.score += SCORE.SOFT; }
+  softDrop(){ if (!this.step(1)) this.lockPiece(); this.score += SCORE.SOFT; }
   hardDrop(){
     let dist = 0;
     while (this.step(1)) { dist++; }
@@ -127,13 +131,7 @@ export class Game {
     const gSec = this.gravitySec();
     if (this._gAcc >= gSec) {
       this._gAcc -= gSec;
-      if (!this.step(1)) {
-        // lock delay breve
-        this.lockDelay += dt;
-        if (this.lockDelay >= 120) { this.lockDelay = 0; this.lockPiece(); }
-      } else {
-        this.lockDelay = 0;
-      }
+      if (!this.step(1)) this.lockPiece();
     }
   }
 }
