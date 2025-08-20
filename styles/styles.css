@@ -1,0 +1,61 @@
+:root {
+  --bg: #0e1116;
+  --fg: #e6edf3;
+  --muted: #9da7b1;
+  --accent: #7cdd6b;
+  --danger: #ff6b6b;
+  --panel: #141922;
+  --panel-border: #222738;
+  --btn: #1f2633;
+  --btn-hover: #2a3446;
+  --shadow: 0 10px 25px rgba(0,0,0,.35);
+  --cell: #12161f;
+}
+@media (prefers-color-scheme: light) {
+  :root { --bg:#f7f9fc; --fg:#0f1720; --panel:#ffffff; --panel-border:#e5e9f0; --btn:#eef2f7; --btn-hover:#e2e8f0; --cell:#e9edf5; }
+}
+html, body { height: 100%; }
+body {
+  margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+  background: var(--bg); color: var(--fg); display: grid; grid-template-rows: auto 1fr auto;
+}
+.app-header, .app-footer { padding: .75rem 1rem; background: transparent; display:flex; align-items:center; justify-content:space-between; }
+.app-title { margin: 0; font-size: 1.25rem; letter-spacing: .04em; }
+.app-main { display:grid; grid-template-columns: 1fr 260px; gap: 12px; padding: 12px; align-items: start; }
+.stage-wrap { position: relative; justify-self: center; box-shadow: var(--shadow); border-radius: 16px; overflow: hidden; background: linear-gradient(180deg,#0b0f16,#0e1116); }
+canvas#game { display:block; background: radial-gradient(120% 120% at 50% 0%, #0e1420 0%, #0b0f16 60%, #070a0e 100%); }
+
+.sidebar { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px; padding: 12px; display:grid; gap:8px; align-self: start; box-shadow: var(--shadow); }
+.sidebar h2 { margin:.2rem 0 .25rem; font-size:.9rem; color:var(--muted) }
+.hud-val { font-weight:700; font-size:1.2rem; }
+
+.mini { width: 100%; background: var(--cell); border-radius: 8px; }
+
+.panel { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+.panel.show { display:flex; }
+.panel > * { background: var(--panel); border:1px solid var(--panel-border); border-radius:16px; padding: 18px; box-shadow: var(--shadow); min-width: 280px; }
+.panel h2 { margin-top: 0; }
+.panel .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+.panel .panel-actions { display:flex; gap:8px; margin-top: 12px; }
+
+.help { margin:.5rem 0 0 1rem; line-height:1.7; }
+
+.btn { appearance: none; border: 1px solid var(--panel-border); border-radius: 10px; background: var(--btn); color: var(--fg); padding: .6rem .9rem; cursor:pointer; transition: transform .05s ease, background .2s ease; }
+.btn:hover { background: var(--btn-hover); transform: translateY(-1px); }
+.btn.primary { background: linear-gradient(180deg,#2d8847,#2a6e41); border-color: rgba(0,0,0,.15); }
+.btn.ghost { background: transparent; }
+
+.touch-overlay { position:absolute; inset:auto 0 0 0; display:none; padding:8px; gap:8px; }
+.touch-overlay .dpad { position:absolute; left:8px; bottom:8px; display:grid; grid-template-columns: 60px 60px; grid-template-rows: 60px 60px; gap:6px; }
+.touch-overlay .actions { position:absolute; right:8px; bottom:8px; display:grid; grid-template-columns: repeat(2,60px); grid-template-rows: repeat(2,60px); gap:6px; }
+.ctl { background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.15); color: var(--fg); border-radius: 12px; font-size: 1.1rem; }
+.ctl:active { background: rgba(255,255,255,.12); transform: translateY(1px); }
+
+@media (max-width: 1000px) {
+  .app-main { grid-template-columns: 1fr; }
+  .sidebar { order: 3; }
+  .touch-overlay { display:block; }
+}
+
+/* FPS badge */
+.fps { position:absolute; top:6px; left:6px; font: 12px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono"; opacity:.8; background: rgba(0,0,0,.35); padding:4px 6px; border-radius:6px; }

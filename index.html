@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Tetris PWA</title>
+
+  <!-- Manifest & favicon: le icone sono file PNG ESTERNI in /assets/icons/ (non inline) -->
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png">
+  <meta name="theme-color" content="#0e1116" />
+
+  <link rel="stylesheet" href="/styles/styles.css">
+</head>
+<body>
+  <!-- Schermata iniziale / Menu -->
+  <header class="app-header" role="banner" aria-label="Intestazione app">
+    <h1 class="app-title">Tetris</h1>
+    <button id="btnInstall" class="btn ghost" aria-label="Installa app" hidden>Installa</button>
+  </header>
+
+  <main class="app-main" role="main">
+    <!-- Canvas di gioco -->
+    <div class="stage-wrap" aria-live="off">
+      <canvas id="game" width="360" height="640" aria-label="Area di gioco Tetris" role="img"></canvas>
+      <div id="touchOverlay" class="touch-overlay" aria-hidden="true">
+        <div class="dpad">
+          <button class="ctl ctl-left" data-act="left" aria-label="Sinistra">←</button>
+          <button class="ctl ctl-right" data-act="right" aria-label="Destra">→</button>
+          <button class="ctl ctl-down" data-act="soft" aria-label="Soft drop">↓</button>
+        </div>
+        <div class="actions">
+          <button class="ctl" data-act="rotL" aria-label="Ruota sinistra">⟲</button>
+          <button class="ctl" data-act="rotR" aria-label="Ruota destra">⟳</button>
+          <button class="ctl" data-act="hard" aria-label="Hard drop">⤓</button>
+          <button class="ctl" data-act="hold" aria-label="Hold">H</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HUD / Pannelli laterali -->
+    <aside class="sidebar" aria-label="Pannello informazioni">
+      <section>
+        <h2>Score</h2>
+        <div id="score" class="hud-val" aria-live="polite">0</div>
+      </section>
+      <section>
+        <h2>Level</h2>
+        <div id="level" class="hud-val" aria-live="polite">1</div>
+      </section>
+      <section>
+        <h2>Lines</h2>
+        <div id="lines" class="hud-val" aria-live="polite">0</div>
+      </section>
+      <section>
+        <h2>Next</h2>
+        <canvas id="next" width="120" height="200" class="mini"></canvas>
+      </section>
+      <section>
+        <h2>Hold</h2>
+        <canvas id="hold" width="120" height="80" class="mini"></canvas>
+      </section>
+      <section>
+        <h2>Timer</h2>
+        <div id="timer" class="hud-val">00:00</div>
+      </section>
+    </aside>
+
+    <!-- Pannelli -->
+    <div id="panelHome" class="panel show" role="dialog" aria-modal="true" aria-labelledby="homeTitle">
+      <h2 id="homeTitle">Tetris</h2>
+      <div class="panel-content">
+        <button id="btnPlay" class="btn primary">Gioca</button>
+        <button id="btnResume" class="btn" hidden>Riprendi</button>
+        <button id="btnSettings" class="btn">Impostazioni</button>
+        <button id="btnHelp" class="btn">Comandi</button>
+        <button id="btnScores" class="btn">High Scores</button>
+      </div>
+    </div>
+
+    <div id="panelPause" class="panel" role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
+      <h2 id="pauseTitle">Pausa</h2>
+      <div class="panel-content">
+        <button id="btnResume2" class="btn primary">Riprendi</button>
+        <button id="btnRestart" class="btn">Nuova partita</button>
+        <button id="btnSettings2" class="btn">Impostazioni</button>
+        <button id="btnHome" class="btn ghost">Home</button>
+      </div>
+    </div>
+
+    <div id="panelGameOver" class="panel" role="dialog" aria-modal="true" aria-labelledby="overTitle">
+      <h2 id="overTitle">Game Over</h2>
+      <p id="overSummary"></p>
+      <div class="panel-content">
+        <button id="btnAgain" class="btn primary">Gioca di nuovo</button>
+        <button id="btnHome2" class="btn ghost">Home</button>
+      </div>
+    </div>
+
+    <div id="panelSettings" class="panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <h2 id="settingsTitle">Impostazioni</h2>
+      <div class="grid2">
+        <label>Musica
+          <select id="selMusic" aria-label="Traccia musicale">
+            <option value="0">Traccia 1</option>
+            <option value="1">Traccia 2</option>
+            <option value="2">Traccia 3</option>
+            <option value="3">Traccia 4</option>
+            <option value="4">Traccia 5</option>
+          </select>
+        </label>
+        <label>Volume Musica
+          <input id="volMusic" type="range" min="0" max="1" step="0.01" value="0.6">
+        </label>
+        <label>Volume FX
+          <input id="volFx" type="range" min="0" max="1" step="0.01" value="0.8">
+        </label>
+        <label>Mostra FPS
+          <input id="chkFps" type="checkbox">
+        </label>
+        <label>Tema
+          <select id="selTheme">
+            <option value="auto">Automatico</option>
+            <option value="dark">Scuro</option>
+            <option value="light">Chiaro</option>
+          </select>
+        </label>
+        <label>Sensibilità mobile
+          <input id="rangeMobile" type="range" min="1" max="5" step="1" value="3">
+        </label>
+      </div>
+      <div class="panel-actions">
+        <button id="btnCloseSettings" class="btn primary">Chiudi</button>
+        <button id="btnMute" class="btn">Mute</button>
+      </div>
+    </div>
+
+    <div id="panelHelp" class="panel" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+      <h2 id="helpTitle">Comandi</h2>
+      <ul class="help">
+        <li>← → muovi, ↓ soft drop</li>
+        <li>Spazio = hard drop</li>
+        <li>Z/X/↑ = ruota, C = hold</li>
+        <li>P = pausa, M = mute</li>
+        <li>Mobile: D‑pad + pulsanti, swipe giù = soft drop, tap lungo = hard drop</li>
+      </ul>
+      <div class="panel-actions">
+        <button id="btnCloseHelp" class="btn primary">Chiudi</button>
+      </div>
+    </div>
+
+    <div id="panelScores" class="panel" role="dialog" aria-modal="true" aria-labelledby="scoresTitle">
+      <h2 id="scoresTitle">High Scores</h2>
+      <ol id="scoresList" class="scores"></ol>
+      <div class="panel-actions">
+        <button id="btnClearScores" class="btn ghost">Azzera</button>
+        <button id="btnCloseScores" class="btn primary">Chiudi</button>
+      </div>
+    </div>
+  </main>
+
+  <footer class="app-footer" role="contentinfo">
+    <span>© Tetris PWA – HTML5</span>
+  </footer>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
