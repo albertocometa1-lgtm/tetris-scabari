@@ -75,6 +75,8 @@ function handleGameEvent(ev){
   } else if (ev.type === 'lineClear') {
     renderer.flash(ev.count);
     audio.fx(ev.count >= 4 ? 'tetris' : 'line');
+  } else if (ev.type === 'spawn') {
+    renderer.spawn();
   } else if (ev.type === 'gameOver') {
     audio.fx('over');
     paused = true;
