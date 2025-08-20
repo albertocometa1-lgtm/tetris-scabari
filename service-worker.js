@@ -5,25 +5,26 @@ const CACHE_VERSION = 'v1';
 const SHELL_CACHE = `shell-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `rt-${CACHE_VERSION}`;
 
-const APP_SHELL = [
-  '/', '/index.html',
-  '/manifest.webmanifest',
-  '/styles/styles.css',
-  '/src/main.js',
-  '/src/game/engine.js',
-  '/src/game/board.js',
-  '/src/game/tetrominoes.js',
-  '/src/game/input.js',
-  '/src/game/audio.js',
-  '/src/game/ui.js',
-  '/src/game/storage.js',
-  '/src/game/utils.js'
-  // ATTENZIONE: niente /assets/icons/*
+const PRECACHE = [
+  './',
+  './index.html',
+  './manifest.webmanifest',
+  './styles/styles.css',
+  './src/main.js',
+  './src/game/engine.js',
+  './src/game/board.js',
+  './src/game/tetrominoes.js',
+  './src/game/input.js',
+  './src/game/audio.js',
+  './src/game/ui.js',
+  './src/game/storage.js',
+  './src/game/utils.js'
 ];
+const APP_SHELL = PRECACHE.map(p => new URL(p, self.location).pathname);
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open(SHELL_CACHE).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting())
+    caches.open(SHELL_CACHE).then((cache) => cache.addAll(PRECACHE)).then(() => self.skipWaiting())
   );
 });
 
@@ -55,8 +56,9 @@ self.addEventListener('fetch', (e) => {
   }
 
   // Evita di gestire le icone se mancano (nessun precache); lasciale pass-through con SWR resiliente
-  const isIcon = url.pathname.startsWith('/assets/icons/');
-  const isMedia = url.pathname.startsWith('/assets/audio/') || url.pathname.endsWith('.png') || url.pathname.endsWith('.jpg');
+  const ROOT = self.location.pathname.replace(/[^/]+$/, '');
+  const isIcon = url.pathname.startsWith(ROOT + 'assets/icons/');
+  const isMedia = url.pathname.startsWith(ROOT + 'assets/audio/') || url.pathname.endsWith('.png') || url.pathname.endsWith('.jpg');
 
   if (isIcon || isMedia) {
     // Stale-While-Revalidate
