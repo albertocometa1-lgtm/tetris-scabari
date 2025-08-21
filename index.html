@@ -20,7 +20,6 @@
   <!-- Schermata iniziale / Menu -->
   <header class="app-header" role="banner" aria-label="Intestazione app">
     <h1 class="app-title">Tetris</h1>
-    <button id="btnInstall" class="btn ghost" aria-label="Installa app" hidden>Installa</button>
   </header>
 
   <main class="app-main" role="main">
@@ -34,8 +33,7 @@
           <button class="ctl ctl-down" data-act="soft" aria-label="Soft drop">↓</button>
         </div>
         <div class="actions">
-          <button class="ctl" data-act="rotL" aria-label="Ruota sinistra">⟲</button>
-          <button class="ctl" data-act="rotR" aria-label="Ruota destra">⟳</button>
+          <button class="ctl" data-act="rotR" aria-label="Ruota">⟳</button>
           <button class="ctl" data-act="hard" aria-label="Hard drop">⤓</button>
           <button class="ctl" data-act="hold" aria-label="Hold">H</button>
         </div>
@@ -78,9 +76,6 @@
       <div class="panel-content">
         <button id="btnPlay" class="btn primary">Gioca</button>
         <button id="btnResume" class="btn" hidden>Riprendi</button>
-        <button id="btnSettings" class="btn">Impostazioni</button>
-        <button id="btnHelp" class="btn">Comandi</button>
-        <button id="btnScores" class="btn">High Scores</button>
       </div>
     </div>
 
@@ -90,6 +85,7 @@
         <button id="btnResume2" class="btn primary">Riprendi</button>
         <button id="btnRestart" class="btn">Nuova partita</button>
         <button id="btnSettings2" class="btn">Impostazioni</button>
+        <button id="btnMute" class="btn">Mute</button>
         <button id="btnHome" class="btn ghost">Home</button>
       </div>
     </div>
@@ -137,30 +133,6 @@
       </div>
       <div class="panel-actions">
         <button id="btnCloseSettings" class="btn primary">Chiudi</button>
-        <button id="btnMute" class="btn">Mute</button>
-      </div>
-    </div>
-
-    <div id="panelHelp" class="panel" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
-      <h2 id="helpTitle">Comandi</h2>
-      <ul class="help">
-        <li>← → muovi, ↓ soft drop</li>
-        <li>Spazio = hard drop</li>
-        <li>Z/X/↑ = ruota, C = hold</li>
-        <li>P = pausa, M = mute</li>
-        <li>Mobile: D‑pad + pulsanti, swipe giù = soft drop, tap lungo = hard drop</li>
-      </ul>
-      <div class="panel-actions">
-        <button id="btnCloseHelp" class="btn primary">Chiudi</button>
-      </div>
-    </div>
-
-    <div id="panelScores" class="panel" role="dialog" aria-modal="true" aria-labelledby="scoresTitle">
-      <h2 id="scoresTitle">High Scores</h2>
-      <ol id="scoresList" class="scores"></ol>
-      <div class="panel-actions">
-        <button id="btnClearScores" class="btn ghost">Azzera</button>
-        <button id="btnCloseScores" class="btn primary">Chiudi</button>
       </div>
     </div>
   </div>

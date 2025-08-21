@@ -44,6 +44,17 @@ export function createInput(canvas, overlay, handler){
     if(longPressTimer){ clearTimeout(longPressTimer); longPressTimer=null; }
   }, {passive:false});
 
+  // double tap on canvas -> rotate left
+  let lastTap = 0;
+  canvas.addEventListener('touchend', (e)=>{
+    const ts = e.timeStamp;
+    if (ts - lastTap < 300) {
+      handler('rotL', true);
+      handler('rotL', false);
+    }
+    lastTap = ts;
+  });
+
   // Gamepad (base)
   let gpId = null;
   const poll = () => {
