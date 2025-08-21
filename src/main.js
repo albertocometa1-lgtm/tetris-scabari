@@ -28,6 +28,7 @@ const btnResume2 = document.getElementById('btnResume2');
 const btnRestart = document.getElementById('btnRestart');
 const btnHome = document.getElementById('btnHome');
 const btnHome2 = document.getElementById('btnHome2');
+const btnMute = document.getElementById('btnMute');
 
 function showPanel(p){
   document.querySelectorAll('.panel').forEach(el => el.classList.remove('show'));
@@ -42,17 +43,19 @@ const renderer = new Renderer(canvas, nextCanvas, holdCanvas, game, store);
 // responsive canvas
 function fitCanvas(){
   const dpr = window.devicePixelRatio || 1;
-  const rect = stage.getBoundingClientRect();
+  const headerH = document.querySelector('.app-header').getBoundingClientRect().height;
+  const hudH = document.querySelector('.sidebar').getBoundingClientRect().height;
+  const footerH = document.querySelector('.app-footer').getBoundingClientRect().height;
+  const cs = getComputedStyle(document.documentElement);
+  const sat = parseFloat(cs.getPropertyValue('--sat')) || 0;
+  const sab = parseFloat(cs.getPropertyValue('--sab')) || 0;
+  const avail = window.innerHeight - sat - sab - headerH - hudH - footerH;
+  stage.style.height = avail + 'px';
+  const ctlH = overlay.querySelector('.dpad').getBoundingClientRect().height + 16;
   const ratio = 10/18;
-  let w = rect.width;
-  let h = rect.height;
-  if (w < h){
-    w = Math.min(w, h * ratio);
-    h = w / ratio;
-  } else {
-    h = Math.min(h, w / ratio);
-    w = h * ratio;
-  }
+  let w = stage.clientWidth;
+  let h = avail - ctlH;
+  if (w / h > ratio) { w = h * ratio; } else { h = w / ratio; }
   const dispW = Math.floor(w);
   const dispH = Math.floor(h);
   const pxW = Math.floor(dispW * dpr);
@@ -72,6 +75,27 @@ function fitCanvas(){
       cv.getContext('2d').setTransform(dpr,0,0,dpr,0,0);
     }
   });
+
+  const doc = document.documentElement;
+  const sidebar = document.querySelector('.sidebar');
+  if (doc.scrollHeight > doc.clientHeight || doc.scrollWidth > doc.clientWidth) {
+    if (!sidebar.classList.contains('compact')) {
+      sidebar.classList.add('compact');
+      console.log('HUD compact');
+      requestAnimationFrame(fitCanvas);
+      return;
+    } else if (!sidebar.classList.contains('x-compact')) {
+      sidebar.classList.add('x-compact');
+      console.log('HUD x-compact');
+      requestAnimationFrame(fitCanvas);
+      return;
+    }
+  } else {
+    sidebar.classList.remove('compact');
+    sidebar.classList.remove('x-compact');
+  }
+
+  diagnose();
 }
 
 let resizeTimer;
@@ -79,6 +103,22 @@ function scheduleFit(){ clearTimeout(resizeTimer); resizeTimer = setTimeout(fitC
 addEventListener('resize', scheduleFit);
 addEventListener('orientationchange', scheduleFit);
 fitCanvas();
+
+function diagnose(){
+  const header = document.querySelector('.app-header').getBoundingClientRect();
+  const hud = document.querySelector('.sidebar').getBoundingClientRect();
+  const canv = canvas.getBoundingClientRect();
+  const dpad = overlay.querySelector('.dpad').getBoundingClientRect();
+  const footer = document.querySelector('.app-footer').getBoundingClientRect();
+  const cs = getComputedStyle(document.documentElement);
+  const sat = parseFloat(cs.getPropertyValue('--sat')) || 0;
+  const sab = parseFloat(cs.getPropertyValue('--sab')) || 0;
+  const budget = window.innerHeight - sat - sab - header.height - hud.height - footer.height - dpad.height;
+  console.log('iw', innerWidth, 'ih', innerHeight);
+  console.log('header', header.height, 'canvas', canv.height, 'hud', hud.height, 'overlay', dpad.height, 'footer', footer.height);
+  console.log('vertical budget', budget);
+  console.log('scroll', document.documentElement.scrollHeight, document.documentElement.clientHeight, document.documentElement.scrollWidth, document.documentElement.clientWidth);
+}
 
 // touch overlay only on coarse pointers
 if (matchMedia('(pointer: coarse)').matches){
@@ -163,6 +203,7 @@ btnResume.addEventListener('click', resumeGame);
 btnResume2.addEventListener('click', resumeGame);
 btnHome.addEventListener('click', () => { pauseGame(); showPanel(panelHome); });
 btnHome2.addEventListener('click', () => { pauseGame(); showPanel(panelHome); });
+btnMute.addEventListener('click', () => performAction('mute'));
 
 function loop(ts){
   const dt = ts - last;
