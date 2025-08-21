@@ -11,6 +11,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="./assets/icons/favicon-32.png">
   <link rel="apple-touch-icon" href="./assets/icons/apple-touch-icon-180.png">
   <meta name="theme-color" content="#0e1116" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
   <link rel="stylesheet" href="./styles/styles.css">
 </head>
@@ -68,7 +70,9 @@
       </section>
     </aside>
 
-    <!-- Pannelli -->
+  </main>
+
+  <div class="panel-wrap">
     <div id="panelHome" class="panel show" role="dialog" aria-modal="true" aria-labelledby="homeTitle">
       <h2 id="homeTitle">Tetris</h2>
       <div class="panel-content">
@@ -159,7 +163,7 @@
         <button id="btnCloseScores" class="btn primary">Chiudi</button>
       </div>
     </div>
-  </main>
+  </div>
 
   <footer class="app-footer" role="contentinfo">
     <span>© Tetris PWA – HTML5</span>

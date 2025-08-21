@@ -9,6 +9,7 @@ const canvas = document.getElementById('game');
 const nextCanvas = document.getElementById('next');
 const holdCanvas = document.getElementById('hold');
 const overlay = document.getElementById('touchOverlay');
+const stage = canvas.parentElement;
 
 const scoreEl = document.getElementById('score');
 const levelEl = document.getElementById('level');
@@ -37,6 +38,53 @@ const store = new Storage('tetris');
 const audio = new AudioSys(store);
 const game = new Game(ev => handleGameEvent(ev));
 const renderer = new Renderer(canvas, nextCanvas, holdCanvas, game, store);
+
+// responsive canvas
+function fitCanvas(){
+  const dpr = window.devicePixelRatio || 1;
+  const rect = stage.getBoundingClientRect();
+  const ratio = 10/18;
+  let w = rect.width;
+  let h = rect.height;
+  if (w < h){
+    w = Math.min(w, h * ratio);
+    h = w / ratio;
+  } else {
+    h = Math.min(h, w / ratio);
+    w = h * ratio;
+  }
+  const dispW = Math.floor(w);
+  const dispH = Math.floor(h);
+  const pxW = Math.floor(dispW * dpr);
+  const pxH = Math.floor(dispH * dpr);
+  if (canvas.width !== pxW || canvas.height !== pxH){
+    canvas.width = pxW; canvas.height = pxH;
+    canvas.style.width = dispW + 'px';
+    canvas.style.height = dispH + 'px';
+    renderer.cx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  [nextCanvas, holdCanvas].forEach(cv => {
+    const r = cv.getBoundingClientRect();
+    const pw = Math.floor(r.width * dpr);
+    const ph = Math.floor(r.height * dpr);
+    if (cv.width !== pw || cv.height !== ph){
+      cv.width = pw; cv.height = ph;
+      cv.getContext('2d').setTransform(dpr,0,0,dpr,0,0);
+    }
+  });
+}
+
+let resizeTimer;
+function scheduleFit(){ clearTimeout(resizeTimer); resizeTimer = setTimeout(fitCanvas,100); }
+addEventListener('resize', scheduleFit);
+addEventListener('orientationchange', scheduleFit);
+fitCanvas();
+
+// touch overlay only on coarse pointers
+if (matchMedia('(pointer: coarse)').matches){
+  overlay.style.display = 'block';
+  overlay.removeAttribute('aria-hidden');
+}
 
 let paused = true;
 let last = now();

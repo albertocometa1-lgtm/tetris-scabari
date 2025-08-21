@@ -15,6 +15,8 @@ export class Renderer {
     this._shakeT = 0; this._shakeDur = 0; this._shakeAmp = 0;
     this._fpsLast = 0; this._fps = 0;
     this._lastTs = 0;
+    this._gridCv = document.createElement('canvas');
+    this._gridCx = this._gridCv.getContext('2d');
   }
 
   cellSize(){
@@ -45,12 +47,8 @@ export class Renderer {
     cx.save(); cx.translate(ox+sx, oy+sy);
 
     // griglia
-    cx.fillStyle = 'rgba(255,255,255,.03)';
-    for (let y=0; y<20; y++){
-      for (let x=0; x<10; x++){
-        cx.fillRect(x*s, y*s, s-1, s-1);
-      }
-    }
+    this.prepareGrid(s);
+    cx.drawImage(this._gridCv, 0, 0);
 
     // board
     for (let y=0;y<20;y++){
@@ -172,6 +170,22 @@ export class Renderer {
         cx.fill();
       });
     });
+  }
+
+  prepareGrid(s){
+    const w = s*10, h = s*20;
+    if (this._gridCv.width !== w || this._gridCv.height !== h){
+      this._gridCv.width = w;
+      this._gridCv.height = h;
+      const gx = this._gridCx;
+      gx.clearRect(0,0,w,h);
+      gx.fillStyle = 'rgba(255,255,255,.03)';
+      for (let y=0; y<20; y++){
+        for (let x=0; x<10; x++){
+          gx.fillRect(x*s, y*s, s-1, s-1);
+        }
+      }
+    }
   }
 
   bounds(cells){
