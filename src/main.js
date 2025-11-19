@@ -8,7 +8,6 @@ import { now } from './game/utils.js';
 const canvas = document.getElementById('game');
 const nextCanvas = document.getElementById('next');
 const holdCanvas = document.getElementById('hold');
-const overlay = document.getElementById('touchOverlay');
 const stage = canvas.parentElement;
 
 const scoreEl = document.getElementById('score');
@@ -21,8 +20,6 @@ const panelPause = document.getElementById('panelPause');
 const panelGameOver = document.getElementById('panelGameOver');
 const panelSettings = document.getElementById('panelSettings');
 const overSummary = document.getElementById('overSummary');
-const mobileSensitivityInput = document.getElementById('rangeMobile');
-const displayModeSelect = document.getElementById('selDisplayMode');
 
 const btnPlay = document.getElementById('btnPlay');
 const btnAgain = document.getElementById('btnAgain');
@@ -35,6 +32,7 @@ const btnMute = document.getElementById('btnMute');
 const btnSettings = document.getElementById('btnSettings');
 const btnSettings2 = document.getElementById('btnSettings2');
 const btnCloseSettings = document.getElementById('btnCloseSettings');
+const btnPauseGame = document.getElementById('btnPauseGame');
 
 let currentPanel = panelHome;
 let previousPanel = null;
@@ -51,86 +49,37 @@ const audio = new AudioSys(store);
 const game = new Game(ev => handleGameEvent(ev));
 const renderer = new Renderer(canvas, nextCanvas, holdCanvas, game, store);
 
-const getMobileSensitivity = () => {
-  if (!mobileSensitivityInput) return 3;
-  const v = parseInt(mobileSensitivityInput.value, 10);
-  return Number.isFinite(v) ? v : 3;
-};
-
-const savedSensitivity = store.get('mobileSensitivity', getMobileSensitivity());
-if (mobileSensitivityInput) {
-  mobileSensitivityInput.value = savedSensitivity;
-  mobileSensitivityInput.addEventListener('input', () => {
-    store.set('mobileSensitivity', getMobileSensitivity());
-  });
-}
-
-const prefersCoarse = matchMedia('(pointer: coarse)');
-const DISPLAY_MODES = ['auto','desktop','mobile'];
-let displayMode = store.get('displayMode', 'auto');
-if (!DISPLAY_MODES.includes(displayMode)) displayMode = 'auto';
-if (displayModeSelect) {
-  displayModeSelect.value = displayMode;
-  displayModeSelect.addEventListener('change', () => {
-    applyDisplayMode(displayModeSelect.value);
-  });
-}
-
-function applyDisplayMode(mode){
-  if (!DISPLAY_MODES.includes(mode)) mode = 'auto';
-  displayMode = mode;
-  store.set('displayMode', mode);
-  if (mode === 'auto') {
-    delete document.body.dataset.display;
-  } else {
-    document.body.dataset.display = mode;
-  }
-  const forceMobile = mode === 'mobile';
-  const forceDesktop = mode === 'desktop';
-  const showOverlay = forceMobile || (!forceDesktop && prefersCoarse.matches);
-  overlay.style.display = showOverlay ? 'block' : 'none';
-  overlay.setAttribute('aria-hidden', showOverlay ? 'false' : 'true');
-  scheduleFit();
-}
-
-const coarseListener = () => {
-  if (displayMode === 'auto') applyDisplayMode(displayMode);
-};
-if (prefersCoarse.addEventListener) {
-  prefersCoarse.addEventListener('change', coarseListener);
-} else if (prefersCoarse.addListener) {
-  prefersCoarse.addListener(coarseListener);
-}
-
-applyDisplayMode(displayMode);
-
 // responsive canvas
 function fitCanvas(){
   const dpr = window.devicePixelRatio || 1;
-  const headerH = document.querySelector('.app-header').getBoundingClientRect().height;
-  const hudH = document.querySelector('.sidebar').getBoundingClientRect().height;
-  const footerH = document.querySelector('.app-footer').getBoundingClientRect().height;
+  const header = document.querySelector('.app-header');
+  const footer = document.querySelector('.app-footer');
+  const headerH = header ? header.getBoundingClientRect().height : 0;
+  const footerH = footer ? footer.getBoundingClientRect().height : 0;
   const cs = getComputedStyle(document.documentElement);
   const sat = parseFloat(cs.getPropertyValue('--sat')) || 0;
   const sab = parseFloat(cs.getPropertyValue('--sab')) || 0;
-  const avail = window.innerHeight - sat - sab - headerH - hudH - footerH;
-  stage.style.height = avail + 'px';
-  const dpadRect = overlay.querySelector('.dpad').getBoundingClientRect();
-  const ctlH = dpadRect.height ? dpadRect.height + 16 : 0;
-  const ratio = 10/18;
-  let w = stage.clientWidth;
-  let h = avail - ctlH;
-  if (w / h > ratio) { w = h * ratio; } else { h = w / ratio; }
-  const dispW = Math.floor(w);
-  const dispH = Math.floor(h);
+  const verticalPadding = 80;
+  const maxHeight = Math.max(360, window.innerHeight - sat - sab - headerH - footerH - verticalPadding);
+  const ratio = 10/20;
+  stage.style.width = '';
+  let dispW = stage.clientWidth;
+  let dispH = dispW / ratio;
+  if (dispH > maxHeight) {
+    dispH = maxHeight;
+    dispW = dispH * ratio;
+  }
+  if (dispW <= 0 || dispH <= 0) return;
+  stage.style.height = dispH + 'px';
+  stage.style.width = dispW + 'px';
   const pxW = Math.floor(dispW * dpr);
   const pxH = Math.floor(dispH * dpr);
   if (canvas.width !== pxW || canvas.height !== pxH){
     canvas.width = pxW; canvas.height = pxH;
-    canvas.style.width = dispW + 'px';
-    canvas.style.height = dispH + 'px';
     renderer.cx.setTransform(dpr,0,0,dpr,0,0);
   }
+  canvas.style.width = dispW + 'px';
+  canvas.style.height = dispH + 'px';
   [nextCanvas, holdCanvas].forEach(cv => {
     const r = cv.getBoundingClientRect();
     const pw = Math.floor(r.width * dpr);
@@ -140,27 +89,6 @@ function fitCanvas(){
       cv.getContext('2d').setTransform(dpr,0,0,dpr,0,0);
     }
   });
-
-  const doc = document.documentElement;
-  const sidebar = document.querySelector('.sidebar');
-  if (doc.scrollHeight > doc.clientHeight || doc.scrollWidth > doc.clientWidth) {
-    if (!sidebar.classList.contains('compact')) {
-      sidebar.classList.add('compact');
-      console.log('HUD compact');
-      requestAnimationFrame(fitCanvas);
-      return;
-    } else if (!sidebar.classList.contains('x-compact')) {
-      sidebar.classList.add('x-compact');
-      console.log('HUD x-compact');
-      requestAnimationFrame(fitCanvas);
-      return;
-    }
-  } else {
-    sidebar.classList.remove('compact');
-    sidebar.classList.remove('x-compact');
-  }
-
-  diagnose();
 }
 
 let resizeTimer;
@@ -169,26 +97,16 @@ addEventListener('resize', scheduleFit);
 addEventListener('orientationchange', scheduleFit);
 fitCanvas();
 
-function diagnose(){
-  const header = document.querySelector('.app-header').getBoundingClientRect();
-  const hud = document.querySelector('.sidebar').getBoundingClientRect();
-  const canv = canvas.getBoundingClientRect();
-  const dpad = overlay.querySelector('.dpad').getBoundingClientRect();
-  const footer = document.querySelector('.app-footer').getBoundingClientRect();
-  const cs = getComputedStyle(document.documentElement);
-  const sat = parseFloat(cs.getPropertyValue('--sat')) || 0;
-  const sab = parseFloat(cs.getPropertyValue('--sab')) || 0;
-  const budget = window.innerHeight - sat - sab - header.height - hud.height - footer.height - dpad.height;
-  console.log('iw', innerWidth, 'ih', innerHeight);
-  console.log('header', header.height, 'canvas', canv.height, 'hud', hud.height, 'overlay', dpad.height, 'footer', footer.height);
-  console.log('vertical budget', budget);
-  console.log('scroll', document.documentElement.scrollHeight, document.documentElement.clientHeight, document.documentElement.scrollWidth, document.documentElement.clientWidth);
-}
-
 let paused = true;
 let last = now();
 const held = {left:false,right:false,soft:false};
 const repeat = {left:0,right:0,soft:0};
+
+function updatePauseButton(){
+  if (!btnPauseGame) return;
+  btnPauseGame.textContent = paused ? 'Riprendi (P)' : 'Pausa (P)';
+  btnPauseGame.disabled = paused ? !game.canResume() : false;
+}
 
 function startGame(){
   game.newGame();
@@ -198,6 +116,7 @@ function startGame(){
   last = now();
   showPanel(null);
   btnResume.hidden = true;
+  updatePauseButton();
 }
 
 function pauseGame(){
@@ -205,6 +124,7 @@ function pauseGame(){
   paused = true;
   btnResume.hidden = false;
   showPanel(panelPause);
+  updatePauseButton();
 }
 
 function resumeGame(){
@@ -212,6 +132,7 @@ function resumeGame(){
   paused = false;
   showPanel(null);
   last = now();
+  updatePauseButton();
 }
 
 function handleGameEvent(ev){
@@ -229,6 +150,7 @@ function handleGameEvent(ev){
     paused = true;
     overSummary.textContent = `Score: ${game.score}`;
     showPanel(panelGameOver);
+    updatePauseButton();
   }
 }
 
@@ -246,14 +168,14 @@ function performAction(act){
   }
 }
 
-createInput(canvas, overlay, (act, pressed) => {
+createInput(canvas, null, (act, pressed) => {
   if (act === 'left' || act === 'right' || act === 'soft') {
     held[act] = pressed;
     if (pressed) { performAction(act); repeat[act] = 0; }
   } else if (pressed) {
     performAction(act);
   }
-}, { getMobileSensitivity });
+});
 
 btnPlay.addEventListener('click', startGame);
 btnAgain.addEventListener('click', startGame);
@@ -263,6 +185,7 @@ btnResume2.addEventListener('click', resumeGame);
 btnHome.addEventListener('click', () => { pauseGame(); showPanel(panelHome); });
 btnHome2.addEventListener('click', () => { pauseGame(); showPanel(panelHome); });
 btnMute.addEventListener('click', () => performAction('mute'));
+if (btnPauseGame) btnPauseGame.addEventListener('click', () => performAction('pause'));
 if (btnSettings) btnSettings.addEventListener('click', () => {
   pauseGame();
   previousPanel = panelHome;
@@ -304,3 +227,5 @@ requestAnimationFrame(loop);
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./service-worker.js', { scope: './' });
 }
+
+updatePauseButton();
