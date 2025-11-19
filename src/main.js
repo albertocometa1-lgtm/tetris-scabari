@@ -20,6 +20,7 @@ const panelHome = document.getElementById('panelHome');
 const panelPause = document.getElementById('panelPause');
 const panelGameOver = document.getElementById('panelGameOver');
 const overSummary = document.getElementById('overSummary');
+const mobileSensitivityInput = document.getElementById('rangeMobile');
 
 const btnPlay = document.getElementById('btnPlay');
 const btnAgain = document.getElementById('btnAgain');
@@ -39,6 +40,20 @@ const store = new Storage('tetris');
 const audio = new AudioSys(store);
 const game = new Game(ev => handleGameEvent(ev));
 const renderer = new Renderer(canvas, nextCanvas, holdCanvas, game, store);
+
+const getMobileSensitivity = () => {
+  if (!mobileSensitivityInput) return 3;
+  const v = parseInt(mobileSensitivityInput.value, 10);
+  return Number.isFinite(v) ? v : 3;
+};
+
+const savedSensitivity = store.get('mobileSensitivity', getMobileSensitivity());
+if (mobileSensitivityInput) {
+  mobileSensitivityInput.value = savedSensitivity;
+  mobileSensitivityInput.addEventListener('input', () => {
+    store.set('mobileSensitivity', getMobileSensitivity());
+  });
+}
 
 // responsive canvas
 function fitCanvas(){
@@ -194,7 +209,7 @@ createInput(canvas, overlay, (act, pressed) => {
   } else if (pressed) {
     performAction(act);
   }
-});
+}, { getMobileSensitivity });
 
 btnPlay.addEventListener('click', startGame);
 btnAgain.addEventListener('click', startGame);

@@ -1,5 +1,5 @@
 // Tastiera + touch overlay + (facolt.) gamepad scan
-export function createInput(canvas, overlay, handler){
+export function createInput(canvas, overlay, handler, options = {}){
   const keymap = {
     ArrowLeft: 'left',
     ArrowRight: 'right',
@@ -23,6 +23,44 @@ export function createInput(canvas, overlay, handler){
   };
   addEventListener('keydown', keydown);
   addEventListener('keyup', keyup);
+
+  const getMobileSensitivity = () => {
+    const val = Number(options.getMobileSensitivity?.()) || 3;
+    return Math.min(5, Math.max(1, val));
+  };
+
+  const tapAction = (act) => {
+    handler(act, true);
+    handler(act, false);
+  };
+
+  const gesture = {
+    id: null,
+    startX: 0,
+    startY: 0,
+    lastX: 0,
+    lastY: 0,
+    accumX: 0,
+    accumY: 0,
+    startTime: 0
+  };
+
+  const resetGesture = () => {
+    gesture.id = null;
+    gesture.accumX = 0;
+    gesture.accumY = 0;
+  };
+
+  const findTouch = (touchList) => {
+    return Array.from(touchList).find(t => t.identifier === gesture.id) || null;
+  };
+
+  const movementThreshold = () => {
+    const sens = getMobileSensitivity();
+    return 28 - (sens - 3) * 4; // range ~20-36px
+  };
+
+  const flickThreshold = () => movementThreshold() * 1.4;
 
   // Touch overlay
   // Touch controls
@@ -53,6 +91,74 @@ export function createInput(canvas, overlay, handler){
       handler('rotL', false);
     }
     lastTap = ts;
+  });
+
+  // gesture sliding on canvas for mobile
+  canvas.addEventListener('touchstart', (e) => {
+    if (gesture.id !== null) return;
+    const t = e.changedTouches[0];
+    if (!t) return;
+    gesture.id = t.identifier;
+    gesture.startX = t.clientX;
+    gesture.startY = t.clientY;
+    gesture.lastX = t.clientX;
+    gesture.lastY = t.clientY;
+    gesture.accumX = 0;
+    gesture.accumY = 0;
+    gesture.startTime = e.timeStamp;
+    e.preventDefault();
+  }, { passive: false });
+
+  canvas.addEventListener('touchmove', (e) => {
+    if (gesture.id === null) return;
+    const t = findTouch(e.changedTouches);
+    if (!t) return;
+    e.preventDefault();
+    const dx = t.clientX - gesture.lastX;
+    const dy = t.clientY - gesture.lastY;
+    gesture.accumX += dx;
+    gesture.accumY += dy;
+    gesture.lastX = t.clientX;
+    gesture.lastY = t.clientY;
+    const threshold = movementThreshold();
+    while (gesture.accumX <= -threshold) {
+      tapAction('left');
+      gesture.accumX += threshold;
+    }
+    while (gesture.accumX >= threshold) {
+      tapAction('right');
+      gesture.accumX -= threshold;
+    }
+    while (gesture.accumY >= threshold) {
+      tapAction('soft');
+      gesture.accumY -= threshold;
+    }
+  }, { passive: false });
+
+  const handleGestureEnd = (touch, timeStamp) => {
+    if (!touch) return;
+    const totalY = touch.clientY - gesture.startY;
+    const totalX = touch.clientX - gesture.startX;
+    const duration = timeStamp - gesture.startTime;
+    const flick = flickThreshold();
+    if (totalY > flick && duration < 220) {
+      tapAction('hard');
+    } else if (totalY < -flick) {
+      tapAction('rotR');
+    } else if (Math.abs(totalX) > flick && Math.abs(totalY) < flick * 0.6) {
+      tapAction(totalX > 0 ? 'right' : 'left');
+    }
+    resetGesture();
+  };
+
+  ['touchend','touchcancel'].forEach(type => {
+    canvas.addEventListener(type, (e) => {
+      if (gesture.id === null) return;
+      const t = findTouch(e.changedTouches);
+      if (!t) return;
+      e.preventDefault();
+      handleGestureEnd(t, e.timeStamp);
+    }, { passive: false });
   });
 
   // Gamepad (base)
