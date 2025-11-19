@@ -65,22 +65,24 @@ export function createInput(canvas, overlay, handler, options = {}){
   // Touch overlay
   // Touch controls
   let longPressTimer = null;
-  overlay.addEventListener('touchstart', (e)=>{
-    const t=e.target.closest('.ctl'); if (!t) return;
-    e.preventDefault();
-    t.setAttribute('aria-pressed','true');
-    handler(t.dataset.act, true);
-    if (t.dataset.act==='soft'){
-      longPressTimer = setTimeout(()=>handler('hard', true), 450);
-    }
-  }, {passive:false});
-  overlay.addEventListener('touchend', (e)=>{
-    const t=e.target.closest('.ctl'); if (!t) return;
-    e.preventDefault();
-    t.removeAttribute('aria-pressed');
-    handler(t.dataset.act, false);
-    if(longPressTimer){ clearTimeout(longPressTimer); longPressTimer=null; }
-  }, {passive:false});
+  if (overlay) {
+    overlay.addEventListener('touchstart', (e)=>{
+      const t=e.target.closest('.ctl'); if (!t) return;
+      e.preventDefault();
+      t.setAttribute('aria-pressed','true');
+      handler(t.dataset.act, true);
+      if (t.dataset.act==='soft'){
+        longPressTimer = setTimeout(()=>handler('hard', true), 450);
+      }
+    }, {passive:false});
+    overlay.addEventListener('touchend', (e)=>{
+      const t=e.target.closest('.ctl'); if (!t) return;
+      e.preventDefault();
+      t.removeAttribute('aria-pressed');
+      handler(t.dataset.act, false);
+      if(longPressTimer){ clearTimeout(longPressTimer); longPressTimer=null; }
+    }, {passive:false});
+  }
 
   // double tap on canvas -> rotate left
   let lastTap = 0;

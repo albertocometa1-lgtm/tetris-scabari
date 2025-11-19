@@ -20,28 +20,23 @@
   <!-- Schermata iniziale / Menu -->
   <header class="app-header" role="banner" aria-label="Intestazione app">
     <h1 class="app-title">Tetris</h1>
+    <nav class="command-menu" aria-label="Comandi da tastiera">
+      <h2>Comandi</h2>
+      <ul>
+        <li><span class="keycap">← / →</span><span>Sposta i blocchi</span></li>
+        <li><span class="keycap">↑ o X</span><span>Ruota a destra</span></li>
+        <li><span class="keycap">Z</span><span>Ruota a sinistra</span></li>
+        <li><span class="keycap">↓</span><span>Soft drop</span></li>
+        <li><span class="keycap">Spazio</span><span>Hard drop</span></li>
+        <li><span class="keycap">C</span><span>Hold</span></li>
+        <li><span class="keycap">P</span><span>Pausa / Riprendi</span></li>
+        <li><span class="keycap">M</span><span>Muto</span></li>
+      </ul>
+    </nav>
   </header>
 
   <main class="app-main" role="main">
-    <!-- Canvas di gioco -->
-    <div class="stage-wrap" aria-live="off">
-      <canvas id="game" width="360" height="640" aria-label="Area di gioco Tetris" role="img"></canvas>
-      <div id="touchOverlay" class="touch-overlay" aria-hidden="true">
-        <div class="dpad">
-          <button class="ctl ctl-left" data-act="left" aria-label="Sinistra">←</button>
-          <button class="ctl ctl-right" data-act="right" aria-label="Destra">→</button>
-          <button class="ctl ctl-down" data-act="soft" aria-label="Soft drop">↓</button>
-        </div>
-        <div class="actions">
-          <button class="ctl" data-act="rotR" aria-label="Ruota">⟳</button>
-          <button class="ctl" data-act="hard" aria-label="Hard drop">⤓</button>
-          <button class="ctl" data-act="hold" aria-label="Hold">H</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- HUD / Pannelli laterali -->
-    <aside class="sidebar" aria-label="Pannello informazioni">
+    <aside class="hud hud-left" aria-label="Statistiche partita">
       <section>
         <h2>Score</h2>
         <div id="score" class="hud-val" aria-live="polite">0</div>
@@ -54,6 +49,22 @@
         <h2>Lines</h2>
         <div id="lines" class="hud-val" aria-live="polite">0</div>
       </section>
+    </aside>
+
+    <div class="stage-column" aria-live="off">
+      <div class="stage-wrap">
+        <canvas id="game" width="360" height="640" aria-label="Area di gioco Tetris" role="img"></canvas>
+      </div>
+      <div class="stage-footer" aria-label="Controlli rapidi">
+        <div class="stage-timer">
+          <h2>Timer</h2>
+          <div id="timer" class="hud-val">00:00</div>
+        </div>
+        <button id="btnPauseGame" class="btn primary" type="button">Pausa (P)</button>
+      </div>
+    </div>
+
+    <aside class="hud hud-right" aria-label="Preview tetramini">
       <section>
         <h2>Next</h2>
         <canvas id="next" width="120" height="80" class="mini"></canvas>
@@ -61,10 +72,6 @@
       <section>
         <h2>Hold</h2>
         <canvas id="hold" width="120" height="80" class="mini"></canvas>
-      </section>
-      <section>
-        <h2>Timer</h2>
-        <div id="timer" class="hud-val">00:00</div>
       </section>
     </aside>
 
@@ -127,16 +134,6 @@
             <option value="dark">Scuro</option>
             <option value="light">Chiaro</option>
           </select>
-        </label>
-        <label>Modalità schermo
-          <select id="selDisplayMode">
-            <option value="auto">Adattiva</option>
-            <option value="desktop">Desktop</option>
-            <option value="mobile">Mobile</option>
-          </select>
-        </label>
-        <label>Sensibilità mobile
-          <input id="rangeMobile" type="range" min="1" max="5" step="1" value="3">
         </label>
       </div>
       <div class="panel-actions">

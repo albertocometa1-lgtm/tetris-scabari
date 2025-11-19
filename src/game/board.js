@@ -14,8 +14,10 @@ export class Board {
   collides(shape, ox, oy) {
     for (const [x,y] of shape) {
       const px = ox + x, py = oy + y;
-      if (py < 0) continue; // spawn above
-      if (!this.inside(px,py) || this.cell(px,py)) return true;
+      if (px < 0 || px >= this.w) return true;
+      if (py >= this.h) return true;
+      if (py < 0) continue; // allow spawn above board but keep lateral bounds
+      if (this.cell(px,py)) return true;
     }
     return false;
   }
