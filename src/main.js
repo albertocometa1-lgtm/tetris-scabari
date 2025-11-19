@@ -31,6 +31,7 @@ const btnHome2 = document.getElementById('btnHome2');
 const btnMute = document.getElementById('btnMute');
 const btnSettings = document.getElementById('btnSettings');
 const btnSettings2 = document.getElementById('btnSettings2');
+const btnSettingsGame = document.getElementById('btnSettingsGame');
 const btnCloseSettings = document.getElementById('btnCloseSettings');
 const btnPauseGame = document.getElementById('btnPauseGame');
 
@@ -119,11 +120,13 @@ function startGame(){
   updatePauseButton();
 }
 
-function pauseGame(){
+function pauseGame(showPausePanel = true){
   if (paused) return;
   paused = true;
   btnResume.hidden = false;
-  showPanel(panelPause);
+  if (showPausePanel) {
+    showPanel(panelPause);
+  }
   updatePauseButton();
 }
 
@@ -182,12 +185,12 @@ btnAgain.addEventListener('click', startGame);
 btnRestart.addEventListener('click', startGame);
 btnResume.addEventListener('click', resumeGame);
 btnResume2.addEventListener('click', resumeGame);
-btnHome.addEventListener('click', () => { pauseGame(); showPanel(panelHome); });
-btnHome2.addEventListener('click', () => { pauseGame(); showPanel(panelHome); });
+btnHome.addEventListener('click', () => { pauseGame(false); showPanel(panelHome); });
+btnHome2.addEventListener('click', () => { pauseGame(false); showPanel(panelHome); });
 btnMute.addEventListener('click', () => performAction('mute'));
 if (btnPauseGame) btnPauseGame.addEventListener('click', () => performAction('pause'));
 if (btnSettings) btnSettings.addEventListener('click', () => {
-  pauseGame();
+  pauseGame(false);
   previousPanel = panelHome;
   showPanel(panelSettings);
 });
@@ -195,10 +198,24 @@ if (btnSettings2) btnSettings2.addEventListener('click', () => {
   previousPanel = panelPause;
   showPanel(panelSettings);
 });
-if (btnCloseSettings) btnCloseSettings.addEventListener('click', () => {
-  const target = previousPanel || panelHome;
-  showPanel(target);
+if (btnSettingsGame) btnSettingsGame.addEventListener('click', () => {
+  if (!paused) {
+    pauseGame(false);
+  }
+  previousPanel = 'game';
+  showPanel(panelSettings);
 });
+if (btnCloseSettings) btnCloseSettings.addEventListener('click', () => {
+  if (previousPanel === 'game') {
+    showPanel(null);
+    previousPanel = null;
+    resumeGame();
+  } else {
+      const target = previousPanel || panelHome;
+      showPanel(target);
+      previousPanel = null;
+    }
+  });
 
 function loop(ts){
   const dt = ts - last;
