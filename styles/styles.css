@@ -75,6 +75,37 @@ canvas#game { display:block; width:100%; height:auto; background:radial-gradient
   .sidebar{order:2;}
 }
 
+body[data-display="desktop"] .app-main {
+  grid-template-columns:minmax(360px,520px) 280px;
+  gap:24px;
+}
+body[data-display="desktop"] .sidebar {
+  order:2;
+}
+body[data-display="desktop"] .touch-overlay {
+  display:none !important;
+}
+
+body[data-display="mobile"] {
+  min-height:100dvh;
+  overflow:hidden;
+}
+body[data-display="mobile"] .app-main {
+  grid-template-columns:1fr;
+  gap:8px;
+  padding:8px var(--sar) 8px var(--sal);
+}
+body[data-display="mobile"] .sidebar {
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:space-between;
+  gap:6px;
+  padding:8px;
+}
+body[data-display="mobile"] .sidebar section {
+  flex:1 0 auto;
+}
+
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}
 }

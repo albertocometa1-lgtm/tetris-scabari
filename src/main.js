@@ -19,8 +19,10 @@ const timerEl = document.getElementById('timer');
 const panelHome = document.getElementById('panelHome');
 const panelPause = document.getElementById('panelPause');
 const panelGameOver = document.getElementById('panelGameOver');
+const panelSettings = document.getElementById('panelSettings');
 const overSummary = document.getElementById('overSummary');
 const mobileSensitivityInput = document.getElementById('rangeMobile');
+const displayModeSelect = document.getElementById('selDisplayMode');
 
 const btnPlay = document.getElementById('btnPlay');
 const btnAgain = document.getElementById('btnAgain');
@@ -30,10 +32,18 @@ const btnRestart = document.getElementById('btnRestart');
 const btnHome = document.getElementById('btnHome');
 const btnHome2 = document.getElementById('btnHome2');
 const btnMute = document.getElementById('btnMute');
+const btnSettings = document.getElementById('btnSettings');
+const btnSettings2 = document.getElementById('btnSettings2');
+const btnCloseSettings = document.getElementById('btnCloseSettings');
 
+let currentPanel = panelHome;
+let previousPanel = null;
 function showPanel(p){
   document.querySelectorAll('.panel').forEach(el => el.classList.remove('show'));
-  if (p) p.classList.add('show');
+  if (p) {
+    p.classList.add('show');
+  }
+  currentPanel = p;
 }
 
 const store = new Storage('tetris');
@@ -55,6 +65,45 @@ if (mobileSensitivityInput) {
   });
 }
 
+const prefersCoarse = matchMedia('(pointer: coarse)');
+const DISPLAY_MODES = ['auto','desktop','mobile'];
+let displayMode = store.get('displayMode', 'auto');
+if (!DISPLAY_MODES.includes(displayMode)) displayMode = 'auto';
+if (displayModeSelect) {
+  displayModeSelect.value = displayMode;
+  displayModeSelect.addEventListener('change', () => {
+    applyDisplayMode(displayModeSelect.value);
+  });
+}
+
+function applyDisplayMode(mode){
+  if (!DISPLAY_MODES.includes(mode)) mode = 'auto';
+  displayMode = mode;
+  store.set('displayMode', mode);
+  if (mode === 'auto') {
+    delete document.body.dataset.display;
+  } else {
+    document.body.dataset.display = mode;
+  }
+  const forceMobile = mode === 'mobile';
+  const forceDesktop = mode === 'desktop';
+  const showOverlay = forceMobile || (!forceDesktop && prefersCoarse.matches);
+  overlay.style.display = showOverlay ? 'block' : 'none';
+  overlay.setAttribute('aria-hidden', showOverlay ? 'false' : 'true');
+  scheduleFit();
+}
+
+const coarseListener = () => {
+  if (displayMode === 'auto') applyDisplayMode(displayMode);
+};
+if (prefersCoarse.addEventListener) {
+  prefersCoarse.addEventListener('change', coarseListener);
+} else if (prefersCoarse.addListener) {
+  prefersCoarse.addListener(coarseListener);
+}
+
+applyDisplayMode(displayMode);
+
 // responsive canvas
 function fitCanvas(){
   const dpr = window.devicePixelRatio || 1;
@@ -66,7 +115,8 @@ function fitCanvas(){
   const sab = parseFloat(cs.getPropertyValue('--sab')) || 0;
   const avail = window.innerHeight - sat - sab - headerH - hudH - footerH;
   stage.style.height = avail + 'px';
-  const ctlH = overlay.querySelector('.dpad').getBoundingClientRect().height + 16;
+  const dpadRect = overlay.querySelector('.dpad').getBoundingClientRect();
+  const ctlH = dpadRect.height ? dpadRect.height + 16 : 0;
   const ratio = 10/18;
   let w = stage.clientWidth;
   let h = avail - ctlH;
@@ -133,12 +183,6 @@ function diagnose(){
   console.log('header', header.height, 'canvas', canv.height, 'hud', hud.height, 'overlay', dpad.height, 'footer', footer.height);
   console.log('vertical budget', budget);
   console.log('scroll', document.documentElement.scrollHeight, document.documentElement.clientHeight, document.documentElement.scrollWidth, document.documentElement.clientWidth);
-}
-
-// touch overlay only on coarse pointers
-if (matchMedia('(pointer: coarse)').matches){
-  overlay.style.display = 'block';
-  overlay.removeAttribute('aria-hidden');
 }
 
 let paused = true;
@@ -219,6 +263,19 @@ btnResume2.addEventListener('click', resumeGame);
 btnHome.addEventListener('click', () => { pauseGame(); showPanel(panelHome); });
 btnHome2.addEventListener('click', () => { pauseGame(); showPanel(panelHome); });
 btnMute.addEventListener('click', () => performAction('mute'));
+if (btnSettings) btnSettings.addEventListener('click', () => {
+  pauseGame();
+  previousPanel = panelHome;
+  showPanel(panelSettings);
+});
+if (btnSettings2) btnSettings2.addEventListener('click', () => {
+  previousPanel = panelPause;
+  showPanel(panelSettings);
+});
+if (btnCloseSettings) btnCloseSettings.addEventListener('click', () => {
+  const target = previousPanel || panelHome;
+  showPanel(target);
+});
 
 function loop(ts){
   const dt = ts - last;
