@@ -4,7 +4,8 @@ import { shuffle } from './utils.js';
 
 const PIECES = Object.keys(TETROMINOES);
 const GRAVITY_BY_LEVEL = [0.8,0.72,0.63,0.55,0.47,0.4,0.33,0.27,0.22,0.18,0.15,0.12,0.1]; // sec per cell
-const SCORE = { SINGLE:100, DOUBLE:300, TRIPLE:500, TETRIS:800, SOFT:1, HARD:2, TSPIN:400 };
+const LINE_SCORE = [0, 200, 600, 1200, 2000];
+const SCORE = { SOFT:1, HARD:2, TSPIN:400 };
 
 export class Game {
   constructor(onEvent) {
@@ -109,14 +110,12 @@ export class Game {
     this.onEvent({type:'lock'});
     const cleared = this.board.clearLines();
     if (cleared>0) {
-      let add = 0;
-      if (cleared===1) add = SCORE.SINGLE;
-      else if (cleared===2) add = SCORE.DOUBLE;
-      else if (cleared===3) add = SCORE.TRIPLE;
-      else if (cleared>=4) add = SCORE.TETRIS;
-      this.score += add;
+      const base = LINE_SCORE[Math.min(cleared, LINE_SCORE.length-1)];
+      const multiplier = Math.max(1, this.level);
+      const awarded = base * multiplier;
+      this.score += awarded;
       this.lines += cleared;
-      this.onEvent({type:'lineClear', count: cleared});
+      this.onEvent({type:'lineClear', count: cleared, points: awarded});
       if (this.lines >= this.level*10) this.level++;
     }
     this.spawn();

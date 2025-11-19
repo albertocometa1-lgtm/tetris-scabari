@@ -26,7 +26,7 @@ export class Board {
     }
   }
   clearLines() {
-    const keep = this.grid.filter(row => row.some(v=>!v) || row.every(v=>!v));
+    const keep = this.grid.filter(row => row.some(v => !v));
     const cleared = this.h - keep.length;
     if (cleared>0) {
       const newRows = Array.from({length:cleared}, ()=>Array(this.w).fill(0));
