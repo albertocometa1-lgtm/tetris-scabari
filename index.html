@@ -17,127 +17,162 @@
   <link rel="stylesheet" href="./styles/styles.css">
 </head>
 <body>
-  <!-- Schermata iniziale / Menu -->
-  <header class="app-header" role="banner" aria-label="Intestazione app">
-    <h1 class="app-title">Tetris</h1>
-    <nav class="command-menu" aria-label="Comandi da tastiera">
-      <h2>Comandi</h2>
-      <ul>
-        <li><span class="keycap">← / →</span><span>Sposta i blocchi</span></li>
-        <li><span class="keycap">↑ o X</span><span>Ruota a destra</span></li>
-        <li><span class="keycap">Z</span><span>Ruota a sinistra</span></li>
-        <li><span class="keycap">↓</span><span>Soft drop</span></li>
-        <li><span class="keycap">Spazio</span><span>Hard drop</span></li>
-        <li><span class="keycap">C</span><span>Hold</span></li>
-        <li><span class="keycap">P</span><span>Pausa / Riprendi</span></li>
-        <li><span class="keycap">M</span><span>Muto</span></li>
-      </ul>
-    </nav>
-  </header>
-
-  <main class="app-main" role="main">
-    <aside class="hud hud-left" aria-label="Statistiche partita">
-      <section>
-        <h2>Score</h2>
-        <div id="score" class="hud-val" aria-live="polite">0</div>
-      </section>
-      <section>
-        <h2>Level</h2>
-        <div id="level" class="hud-val" aria-live="polite">1</div>
-      </section>
-      <section>
-        <h2>Lines</h2>
-        <div id="lines" class="hud-val" aria-live="polite">0</div>
-      </section>
-    </aside>
-
-    <div class="stage-column" aria-live="off">
-      <div class="stage-wrap">
-        <canvas id="game" width="360" height="640" aria-label="Area di gioco Tetris" role="img"></canvas>
+  <div class="game-shell">
+    <header class="game-header" role="banner" aria-label="Testata interfaccia di gioco">
+      <div class="header-title">
+        <span class="eyebrow">versione speciale</span>
+        <h1 class="wordmark" aria-hidden="true">TETRIS</h1>
       </div>
-      <div class="stage-footer" aria-label="Controlli rapidi">
-        <div class="stage-timer">
-          <h2>Timer</h2>
-          <div id="timer" class="hud-val">00:00</div>
+      <button id="btnSettingsGame" class="gear-button" type="button">
+        <span class="gear-icon" aria-hidden="true">
+          <svg viewBox="0 0 64 64" role="img" aria-hidden="true">
+            <path d="M38 6l-12 0-2 6-6 2-6-4-8 8 4 6-2 6-6 2 0 12 6 2 2 6-4 6 8 8 6-4 6 2 2 6 12 0 2-6 6-2 6 4 8-8-4-6 2-6 6-2 0-12-6-2-2-6 4-6-8-8-6 4-6-2-2-6zm-6 18c6.6 0 12 5.4 12 12s-5.4 12-12 12-12-5.4-12-12 5.4-12 12-12z" />
+          </svg>
+        </span>
+        <span class="gear-label">Impostazioni</span>
+      </button>
+    </header>
+
+    <main class="game-layout" role="main">
+      <section class="info-panel score-panel" aria-label="Area punteggio">
+        <h2>PUNTEGGIO</h2>
+        <div class="score-values">
+          <div class="stat">
+            <span>Score</span>
+            <strong id="score" aria-live="polite">0</strong>
+          </div>
+          <div class="stat">
+            <span>Level</span>
+            <strong id="level" aria-live="polite">1</strong>
+          </div>
+          <div class="stat">
+            <span>Linee</span>
+            <strong id="lines" aria-live="polite">0</strong>
+          </div>
         </div>
-        <button id="btnPauseGame" class="btn primary" type="button">Pausa (P)</button>
-      </div>
-    </div>
-
-    <aside class="hud hud-right" aria-label="Preview tetramini">
-      <section>
-        <h2>Next</h2>
-        <canvas id="next" width="120" height="80" class="mini"></canvas>
+        <div class="mini-preview">
+          <div>
+            <h3>Prossimo</h3>
+            <canvas id="next" width="120" height="80" class="mini" aria-label="Prossimo tetramino"></canvas>
+          </div>
+          <div>
+            <h3>Hold</h3>
+            <canvas id="hold" width="120" height="80" class="mini" aria-label="Tetramino in hold"></canvas>
+          </div>
+        </div>
       </section>
-      <section>
-        <h2>Hold</h2>
-        <canvas id="hold" width="120" height="80" class="mini"></canvas>
-      </section>
-    </aside>
 
-  </main>
+      <section class="stage-panel" aria-live="off">
+        <div class="stage-frame">
+          <div class="stage-inner">
+            <canvas id="game" width="360" height="640" aria-label="Area di gioco Tetris" role="img"></canvas>
+          </div>
+        </div>
+        <div class="stage-controls" aria-label="Controlli rapidi">
+          <div class="timer-block">
+            <span>Timer</span>
+            <strong id="timer">00:00</strong>
+          </div>
+          <button id="btnPauseGame" class="btn primary" type="button">Pausa (P)</button>
+        </div>
+      </section>
+
+      <section class="info-panel commands-panel" aria-label="Comandi a schermo">
+        <h2>COMANDI A SCHERMO</h2>
+        <ul class="command-list">
+          <li><span class="keycap">← / →</span><span>Sposta i blocchi</span></li>
+          <li><span class="keycap">↑ o X</span><span>Ruota a destra</span></li>
+          <li><span class="keycap">Z</span><span>Ruota a sinistra</span></li>
+          <li><span class="keycap">↓</span><span>Soft drop</span></li>
+          <li><span class="keycap">Spazio</span><span>Hard drop</span></li>
+          <li><span class="keycap">C</span><span>Hold</span></li>
+          <li><span class="keycap">P</span><span>Pausa / Riprendi</span></li>
+          <li><span class="keycap">M</span><span>Muto</span></li>
+        </ul>
+      </section>
+    </main>
+  </div>
 
   <div class="panel-wrap">
-    <div id="panelHome" class="panel show" role="dialog" aria-modal="true" aria-labelledby="homeTitle">
-      <h2 id="homeTitle">Tetris</h2>
-      <div class="panel-content">
-        <button id="btnPlay" class="btn primary">Gioca</button>
-        <button id="btnResume" class="btn" hidden>Riprendi</button>
-        <button id="btnSettings" class="btn">Impostazioni</button>
+    <div id="panelHome" class="panel panel-home show" role="dialog" aria-modal="true" aria-labelledby="homeTitle">
+      <div class="home-hero">
+        <div class="home-card">
+          <p class="home-eyebrow">il puzzle game più iconico</p>
+          <h2 id="homeTitle" class="home-title">TETRIS</h2>
+          <p class="home-subtitle">Ricomponi le forme e scala la classifica.</p>
+          <div class="home-actions">
+            <button id="btnPlay" class="btn home primary">nuova partita</button>
+            <button id="btnResume" class="btn home" hidden>riprendi</button>
+            <button id="btnSettings" class="btn home outline">impostazioni</button>
+          </div>
+        </div>
+        <div class="home-puzzle" aria-hidden="true">
+          <svg class="puzzle-shape orange" viewBox="0 0 120 120"><rect x="40" y="0" width="40" height="40"/><rect x="0" y="40" width="120" height="40"/></svg>
+          <svg class="puzzle-shape purple" viewBox="0 0 120 120"><rect x="0" y="0" width="40" height="80"/><rect x="40" y="40" width="40" height="40"/><rect x="80" y="40" width="40" height="40"/></svg>
+          <svg class="puzzle-shape green" viewBox="0 0 120 120"><rect x="0" y="40" width="80" height="40"/><rect x="80" y="0" width="40" height="80"/></svg>
+          <svg class="puzzle-shape yellow" viewBox="0 0 120 120"><rect x="0" y="40" width="120" height="40"/><rect x="80" y="0" width="40" height="40"/></svg>
+          <svg class="puzzle-shape red" viewBox="0 0 120 120"><rect x="0" y="0" width="40" height="120"/><rect x="40" y="80" width="80" height="40"/></svg>
+        </div>
       </div>
     </div>
 
     <div id="panelPause" class="panel" role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
-      <h2 id="pauseTitle">Pausa</h2>
-      <div class="panel-content">
-        <button id="btnResume2" class="btn primary">Riprendi</button>
-        <button id="btnRestart" class="btn">Nuova partita</button>
-        <button id="btnSettings2" class="btn">Impostazioni</button>
-        <button id="btnMute" class="btn">Mute</button>
-        <button id="btnHome" class="btn ghost">Home</button>
+      <div>
+        <h2 id="pauseTitle">Pausa</h2>
+        <div class="panel-content">
+          <button id="btnResume2" class="btn primary">Riprendi</button>
+          <button id="btnRestart" class="btn">Nuova partita</button>
+          <button id="btnSettings2" class="btn">Impostazioni</button>
+          <button id="btnMute" class="btn">Mute</button>
+          <button id="btnHome" class="btn ghost">Home</button>
+        </div>
       </div>
     </div>
 
     <div id="panelGameOver" class="panel" role="dialog" aria-modal="true" aria-labelledby="overTitle">
-      <h2 id="overTitle">Game Over</h2>
-      <p id="overSummary"></p>
-      <div class="panel-content">
-        <button id="btnAgain" class="btn primary">Gioca di nuovo</button>
-        <button id="btnHome2" class="btn ghost">Home</button>
+      <div>
+        <h2 id="overTitle">Game Over</h2>
+        <p id="overSummary"></p>
+        <div class="panel-content">
+          <button id="btnAgain" class="btn primary">Gioca di nuovo</button>
+          <button id="btnHome2" class="btn ghost">Home</button>
+        </div>
       </div>
     </div>
 
     <div id="panelSettings" class="panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
-      <h2 id="settingsTitle">Impostazioni</h2>
-      <div class="grid2">
-        <label>Musica
-          <select id="selMusic" aria-label="Traccia musicale">
-            <option value="0">Traccia 1</option>
-            <option value="1">Traccia 2</option>
-            <option value="2">Traccia 3</option>
-            <option value="3">Traccia 4</option>
-            <option value="4">Traccia 5</option>
-          </select>
-        </label>
-        <label>Volume Musica
-          <input id="volMusic" type="range" min="0" max="1" step="0.01" value="0.6">
-        </label>
-        <label>Volume FX
-          <input id="volFx" type="range" min="0" max="1" step="0.01" value="0.8">
-        </label>
-        <label>Mostra FPS
-          <input id="chkFps" type="checkbox">
-        </label>
-        <label>Tema
-          <select id="selTheme">
-            <option value="auto">Automatico</option>
-            <option value="dark">Scuro</option>
-            <option value="light">Chiaro</option>
-          </select>
-        </label>
-      </div>
-      <div class="panel-actions">
-        <button id="btnCloseSettings" class="btn primary">Chiudi</button>
+      <div>
+        <h2 id="settingsTitle">Impostazioni</h2>
+        <div class="grid2">
+          <label>Musica
+            <select id="selMusic" aria-label="Traccia musicale">
+              <option value="0">Traccia 1</option>
+              <option value="1">Traccia 2</option>
+              <option value="2">Traccia 3</option>
+              <option value="3">Traccia 4</option>
+              <option value="4">Traccia 5</option>
+            </select>
+          </label>
+          <label>Volume Musica
+            <input id="volMusic" type="range" min="0" max="1" step="0.01" value="0.6">
+          </label>
+          <label>Volume FX
+            <input id="volFx" type="range" min="0" max="1" step="0.01" value="0.8">
+          </label>
+          <label>Mostra FPS
+            <input id="chkFps" type="checkbox">
+          </label>
+          <label>Tema
+            <select id="selTheme">
+              <option value="auto">Automatico</option>
+              <option value="dark">Scuro</option>
+              <option value="light">Chiaro</option>
+            </select>
+          </label>
+        </div>
+        <div class="panel-actions">
+          <button id="btnCloseSettings" class="btn primary">Chiudi</button>
+        </div>
       </div>
     </div>
   </div>
